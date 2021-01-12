@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         아카라이브 이미지 미리보기 개선
 // @namespace    아카라이브
-// @version      1.3
+// @version      1.4
 // @description  아카라이브 이미지 미리보기 좆같은 것 ㅇㅈ? ㅇㅇㅈ 이미지 강제로 크게 만들어버리기~
 // @updateUrl    https://raw.githubusercontent.com/cho7052002/tampermonkey/main/arcalive_preview.js
 // @author       ggumdori
@@ -23,12 +23,16 @@
 1.3:
     최적화
     updateUrl 추가
+1.4:
+    사이드바를 왼쪽으로 옮김
+    이미지 미리보기를 왼쪽으로 옮김
+    마이너한 버그 수정
 */
 
 (function() {
     'use strict';
     let popupPreviewSize = 300;
-    let debug = false;
+    let debug = true;
     let throttleInterval = 100;
 
 
@@ -57,7 +61,6 @@
             return;
         }
         elements.forEach(i => {
-            lolog(i.getAttribute('data-lazy-src'));
             //data-lazy-src for firefox support
             if(i.getAttribute('data-lazy-src') === null) {
                 i.src = i.getAttribute('src').replaceAll('?type=list', '');
@@ -70,12 +73,12 @@
 
     let oldLeft;
     let oldNavBottom;
-    let isPreviousPopup = window.innerWidth - document.querySelector('article').getBoundingClientRect().right - 75 < popupPreviewSize;
+    let isPreviousPopup = false;
     function previewResize() {
         let previewElements = document.querySelectorAll('.vrow-preview');
 
-        let left = window.innerWidth - document.querySelector('article').getBoundingClientRect().right - 75;
-        let isPopup = window.innerWidth - document.querySelector('article').getBoundingClientRect().right - 75 < popupPreviewSize;
+        let left = document.querySelector('article').getBoundingClientRect().left - 75;
+        let isPopup = left < popupPreviewSize;
         lolog('left: ' + left);
         lolog('oldLeft: ' + oldLeft + '\n' +
               'left: ' + left);
@@ -86,7 +89,7 @@
                     i.style.position = 'absolute';
                     i.style.width = popupPreviewSize + 'px';
                     i.style.height = popupPreviewSize + 'px';
-                    i.style.right = '';
+                    i.style.left = '';
                     i.style.top = 'calc(-' + popupPreviewSize + 'px - 15px)';
                 });
                 lolog('popup preview called');
@@ -94,7 +97,7 @@
                 lolog('popup preview skipped');
             }
         } else {
-            //set preview position to right
+            //set preview position to left
             let navBottom = document.querySelector('.navbar-wrapper').getBoundingClientRect().bottom;
             navBottom = navBottom > 0 ? navBottom : 0;
             lolog('oldNavBottom: ' + oldNavBottom + '\n' +
@@ -104,12 +107,12 @@
                     i.style.position = 'fixed';
                     i.style.width = left + 'px';
                     i.style.height = 'calc(100vh - ' + navBottom + 'px)';
-                    i.style.right = '0px';
+                    i.style.left = '0px';
                     i.style.top = navBottom + 'px';
                 });
-                lolog('right preview called');
+                lolog('left preview called');
             }else {
-                lolog('right preview skipped');
+                lolog('left preview skipped');
             }
             oldNavBottom = navBottom;
         }
@@ -117,6 +120,19 @@
         isPreviousPopup = isPopup;
     }
 
+    function sidebarToLeft() {
+        let sidebar = document.querySelector('.right-sidebar')
+        sidebar.style.float = 'left';
+        sidebar.style.paddingLeft = '0.75rem';
+        sidebar.style.paddingRight = '0.75rem';
+
+        let article = document.querySelector('.board-article');
+        article.style.paddingRight = '0px';
+        article.style.marginRightLeft = '0px';
+        article.style.margin = '0px';
+    }
+
+    sidebarToLeft();
     let previewCount = document.querySelectorAll('.vrow-preview').length;
     imgSrcUpdate(previewCount);
     previewResize();
