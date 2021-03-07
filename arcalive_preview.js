@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         아카라이브 이미지 미리보기 개선
 // @namespace    아카라이브
-// @version      1.4
+// @version      1.5
 // @description  아카라이브 이미지 미리보기 좆같은 것 ㅇㅈ? ㅇㅇㅈ 이미지 강제로 크게 만들어버리기~
 // @updateUrl    https://raw.githubusercontent.com/cho7052002/tampermonkey/main/arcalive_preview.js
 // @author       ggumdori
@@ -27,12 +27,14 @@
     사이드바를 왼쪽으로 옮김
     이미지 미리보기를 왼쪽으로 옮김
     마이너한 버그 수정
+1.5:
+    맨 아래에 Base 64 Decoder 추가
 */
 
 (function() {
     'use strict';
     let popupPreviewSize = 300;
-    let debug = true;
+    let debug = false;
     let throttleInterval = 100;
 
 
@@ -132,10 +134,47 @@
         article.style.margin = '0px';
     }
 
+    function addBase64Decoder() {
+        let myDiv = document.createElement('div');
+        document.body.appendChild(myDiv);
+        myDiv.style.display = 'flex';
+        myDiv.style.bottom = '20px';
+        myDiv.style.position = 'fixed'
+        myDiv.style.width = '300px';
+        //myDiv.style.height = '50px';
+        myDiv.style.left = '20px';
+        myDiv.style.border = '1px solid';
+        myDiv.style.borderColor = '#bbb';
+        myDiv.style.backgroundColor = '#FFFFFF';
+        myDiv.style.padding = '.5rem';
+        myDiv.style.zIndex = '999';
+
+        let textInput = document.createElement('input');
+        textInput.style.display = 'flex';
+        textInput.style.flex = '1';
+        textInput.style.marginRight = '.5rem';
+        textInput.style.border = '1px solid';
+        textInput.style.borderColor = '#bbb';
+        myDiv.appendChild(textInput);
+
+        let button = document.createElement('a');
+        button.classList.add('btn');
+        button.classList.add('btn-arca');
+        button.classList.add('btn-sm');
+        button.padding = '.5rem';
+        button.innerText = '버튼';
+        myDiv.appendChild(button);
+
+        button.onclick = function(){
+            textInput.value = atob(textInput.value);
+        };
+    }
+
     sidebarToLeft();
     let previewCount = document.querySelectorAll('.vrow-preview').length;
     imgSrcUpdate(previewCount);
     previewResize();
+    addBase64Decoder();
     window.addEventListener('resize', () => {
         throttleFunction(previewResize, 100);
     });
