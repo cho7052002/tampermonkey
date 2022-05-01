@@ -1,9 +1,9 @@
 // ==UserScript==
 // @name         아카라이브 이미지 미리보기 개선
 // @namespace    아카라이브
-// @version      1.6
+// @version      1.5
 // @description  아카라이브 이미지 미리보기 좆같은 것 ㅇㅈ? ㅇㅇㅈ 이미지 강제로 크게 만들어버리기~
-// @updateURL    https://raw.githubusercontent.com/cho7052002/tampermonkey/main/arcalive_preview.js
+// @updateUrl    https://raw.githubusercontent.com/cho7052002/tampermonkey/main/arcalive_preview.js
 // @author       ggumdori
 // @match        http*://*.arca.live/b/*
 // @match        http*://arca.live/b/*
@@ -29,24 +29,19 @@
     마이너한 버그 수정
 1.5:
     맨 아래에 Base 64 Decoder 추가
-1.6:
-    미리보기 이미지가 2개씩 나오도록 수정
 */
 
 (function() {
     'use strict';
     let popupPreviewSize = 300;
-    let debug = true;
+    let debug = false;
     let throttleInterval = 100;
 
 
-    function lolog(type, o) {
+    function lolog(o) {
         if(debug) {
-            console.log('[' + type + ']: ' + o);
+            console.log(o);
         }
-    }
-    function log(o) {
-        console.log(o)
     }
 
     let THROTTLE;
@@ -60,12 +55,10 @@
         }, delay)
     }
 
-    //이미지를 리스트용 프리뷰에서 원본 이미지로 바꾼다.
-    function imgSrcUpdate() {
-        let previewCount = document.querySelectorAll('.vrow-preview').length;
+    function imgSrcUpdate(previewCount) {
         let elements = document.querySelectorAll('.vrow-preview > img');
         if(elements.length != previewCount) {
-            lolog('imgSrcUpdate', previewCount + 'expected ' + previewCount + ' but ' + elements.length + ', failed!');
+            lolog(previewCount + 'expected ' + previewCount + ' but ' + elements.length + ', failed!');
             setTimeout(() => {imgSrcUpdate(previewCount)}, 100);
             return;
         }
@@ -80,59 +73,16 @@
         });
     }
 
-    //기존 프리뷰 이미지를 삭제하고 프리뷰 이미지를 2개 추가한다
-    function addSecondPreviewImage() {
-        let previewList = document.querySelectorAll('.vrow-preview');
-
-        let parser = new DOMParser();
-        let docType = 'text/html';
-
-        previewList.forEach(preview => {
-
-            while(preview.firstChild) {
-                preview.removeChild(preview.firstChild);
-            }
-
-            fetch(preview.closest('.vrow').href)
-                .then(response => response.text())
-                .then(htmlText => {
-                    let doc = parser.parseFromString(htmlText, docType);
-                    let images = doc.querySelector('.article-body').querySelectorAll('img');
-                    let previewDiv = document.createElement('div');
-                    previewDiv.style.height = '100%';
-                    previewDiv.style.width = '100%';
-                    previewDiv.style.display = "grid";
-                    previewDiv.style.gridTemplateColumns = '1fr';
-
-                    for(let i = 0; i < 2; i++) {
-                        if(images[i] === undefined) {
-                            continue;
-                        }
-
-                        let imgElement = document.createElement('img');
-                        imgElement.src = images[i].src;
-                        let imgDiv = document.createElement('div');
-                        imgDiv.style.overflow = 'auto';
-                        imgDiv.appendChild(imgElement);
-                        imgDiv.style.padding = '2px';
-                        previewDiv.appendChild(imgDiv);
-                    }
-                    preview.appendChild(previewDiv);
-                })
-        })
-    }
-
     let oldLeft;
     let oldNavBottom;
     let isPreviousPopup = false;
-
     function previewResize() {
         let previewElements = document.querySelectorAll('.vrow-preview');
 
         let left = document.querySelector('article').getBoundingClientRect().left - 75;
         let isPopup = left < popupPreviewSize;
-        lolog('previewResize', 'left: ' + left);
-        lolog('previewResize', 'oldLeft: ' + oldLeft + '\n' +
+        lolog('left: ' + left);
+        lolog('oldLeft: ' + oldLeft + '\n' +
               'left: ' + left);
         //set preview position to above the board list
         if(isPopup) {
@@ -144,15 +94,15 @@
                     i.style.left = '';
                     i.style.top = 'calc(-' + popupPreviewSize + 'px - 15px)';
                 });
-                lolog('previewResize', 'popup preview called');
+                lolog('popup preview called');
             } else {
-                lolog('previewResize', 'popup preview skipped');
+                lolog('popup preview skipped');
             }
         } else {
             //set preview position to left
             let navBottom = document.querySelector('.navbar-wrapper').getBoundingClientRect().bottom;
             navBottom = navBottom > 0 ? navBottom : 0;
-            lolog('previewResize', 'oldNavBottom: ' + oldNavBottom + '\n' +
+            lolog('oldNavBottom: ' + oldNavBottom + '\n' +
                       'navBottom: ' + navBottom + '\n')
             if(oldNavBottom != navBottom || oldLeft != left) {
                 document.querySelectorAll('.vrow-preview').forEach(i => {
@@ -162,9 +112,9 @@
                     i.style.left = '0px';
                     i.style.top = navBottom + 'px';
                 });
-                lolog('previewResize', 'left preview called');
+                lolog('left preview called');
             }else {
-                lolog('previewResize', 'left preview skipped');
+                lolog('left preview skipped');
             }
             oldNavBottom = navBottom;
         }
@@ -221,10 +171,8 @@
     }
 
     sidebarToLeft();
-
-    addSecondPreviewImage();
-
-    //imgSrcUpdate();
+    let previewCount = document.querySelectorAll('.vrow-preview').length;
+    imgSrcUpdate(previewCount);
     previewResize();
     addBase64Decoder();
     window.addEventListener('resize', () => {
