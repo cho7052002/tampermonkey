@@ -36,7 +36,7 @@
 (function() {
     'use strict';
     let popupPreviewSize = 300;
-    let debug = false;
+    let debug = true;
     let throttleInterval = 100;
 
 
