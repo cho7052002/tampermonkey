@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         아카라이브 이미지 미리보기 개선
 // @namespace    아카라이브
-// @version      1.7
+// @version      1.6
 // @description  아카라이브 이미지 미리보기 좆같은 것 ㅇㅈ? ㅇㅇㅈ 이미지 강제로 크게 만들어버리기~
 // @updateURL    https://raw.githubusercontent.com/cho7052002/tampermonkey/main/arcalive_preview.js
 // @author       ggumdori
@@ -31,8 +31,6 @@
     맨 아래에 Base 64 Decoder 추가
 1.6:
     미리보기 이미지가 2개씩 나오도록 수정
-1.7:
-	gif, video 의 미리보기가 나오도록 수정
 */
 
 (function() {
@@ -99,7 +97,7 @@
                 .then(response => response.text())
                 .then(htmlText => {
                     let doc = parser.parseFromString(htmlText, docType);
-                    let contents = doc.querySelector('.article-body').querySelectorAll('img,video');
+                    let images = doc.querySelector('.article-body').querySelectorAll('img');
                     let previewDiv = document.createElement('div');
                     previewDiv.style.height = '100%';
                     previewDiv.style.width = '100%';
@@ -107,26 +105,16 @@
                     previewDiv.style.gridTemplateColumns = '1fr';
 
                     for(let i = 0; i < 2; i++) {
-                        let content = contents[i];
-                        if(content === undefined) {
+                        if(images[i] === undefined) {
                             continue;
                         }
 
-                        let source = content.src;
-                        while(content.attributes.length > 0) {
-                            content.removeAttribute(content.attributes[0].name);
-                        }
-                        content.src = source;
-                        content.style.width = '100%';
-                        content.style.height = '100%';
-
+                        let imgElement = document.createElement('img');
+                        imgElement.src = images[i].src;
                         let imgDiv = document.createElement('div');
                         imgDiv.style.overflow = 'auto';
+                        imgDiv.appendChild(imgElement);
                         imgDiv.style.padding = '2px';
-                        imgDiv.style.textAlign = "center";
-
-                        imgDiv.appendChild(content);
-
                         previewDiv.appendChild(imgDiv);
                     }
                     preview.appendChild(previewDiv);
