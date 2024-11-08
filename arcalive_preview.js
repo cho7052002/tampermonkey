@@ -122,18 +122,6 @@
         isPreviousPopup = isPopup;
     }
 
-    function sidebarToLeft() {
-        let sidebar = document.querySelector('.right-sidebar')
-        sidebar.style.float = 'left';
-        sidebar.style.paddingLeft = '0.75rem';
-        sidebar.style.paddingRight = '0.75rem';
-
-        let article = document.querySelector('.board-article');
-        article.style.paddingRight = '0px';
-        article.style.marginRightLeft = '0px';
-        article.style.margin = '0px';
-    }
-
     function addBase64Decoder() {
         let myDiv = document.createElement('div');
         document.body.appendChild(myDiv);
@@ -157,24 +145,60 @@
         textInput.style.borderColor = '#bbb';
         myDiv.appendChild(textInput);
 
-        let button = document.createElement('a');
-        button.classList.add('btn');
-        button.classList.add('btn-arca');
-        button.classList.add('btn-sm');
-        button.padding = '.5rem';
-        button.innerText = '버튼';
-        myDiv.appendChild(button);
+        let openButton = document.createElement('a');
+        openButton.classList.add('btn');
+        openButton.classList.add('btn-arca');
+        openButton.classList.add('btn-sm');
+        openButton.padding = '.5rem';
+        openButton.innerText = '열기';
+        myDiv.appendChild(openButton);
 
-        button.onclick = function(){
-            textInput.value = atob(textInput.value);
+        openButton.onclick = function(){
+            try {
+                textInput.value = atob(textInput.value);
+            } catch (_) {}
+
+            try {
+                new URL(textInput.value);
+                window.open(textInput.value, '_blank').focus();
+            } catch (_) {
+            }
         };
     }
 
-    sidebarToLeft();
+
+
+
+    let images = document.querySelectorAll(".article-content img, .article-content video:not([class])");
+    let current = null;
+    function addEventListener() {
+        document.addEventListener('keydown', function(){
+            if (current == null) {
+                current = 0;
+            }
+            else if (event.key == "ArrowLeft") {
+                current--;
+                if (current < 0) current = images.length - 1;
+            }
+            else if (event.key == "ArrowRight") {
+                current++;
+                current %= images.length;
+            }
+
+            window.scroll(0, document.querySelectorAll(".article-content img, .article-content video:not([class])")[current].offsetTop)
+        });
+    }
+
+
+
+
     let previewCount = document.querySelectorAll('.vrow-preview').length;
     imgSrcUpdate(previewCount);
     previewResize();
     addBase64Decoder();
+    addEventListener();
+
+
     window.addEventListener('resize', () => {
         throttleFunction(previewResize, 100);
     });
