@@ -173,6 +173,7 @@
     let current = null;
     function addEventListener() {
         document.addEventListener('keydown', function(){
+            if (event.key != "ArrowLeft" || event.key != "ArrowRight") return;
             if (current == null) {
                 current = 0;
             }
